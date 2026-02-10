@@ -527,7 +527,7 @@ def query_bedrock_json(system_prompt, user_input, model_id="meta.llama3-8b-instr
         return None
 
 def quiz_tutor_call(kid_name, quiz_state, model_id="meta.llama3-8b-instruct-v1:0", region="us-east-1", use_rag=False, topic="the Madagascar movie"):
-    """Buzz Lightyear asks next quiz question (returns JSON)\"\"\"
+    """Buzz Lightyear asks next quiz question (returns JSON)"""
     print("🎓 Tutor: Generating question...")
     
     # Calculate difficulty based on progress
