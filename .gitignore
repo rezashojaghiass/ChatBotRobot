@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# AWS Credentials - NEVER COMMIT
+.aws/
+credentials
+config
+*.pem
+*.key
+
+# Riva models and caches
+*.rmir
+*.riva
+models/
+.cache/
+~/.cache/
+
+# Audio files (can be large)
+*.wav
+*.mp3
+*.flac
+*.ogg
+
+# Subtitle files (copyright)
+*.srt
+*.sub
+*.vtt
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker volumes
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
