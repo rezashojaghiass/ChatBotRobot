@@ -78,19 +78,91 @@ def chunk_dialogues(dialogues, chunk_size=10):
             chunks.append(chunk)
     return chunks
 
+def load_pdf_file(filepath):
+    """Load text from PDF file"""
+    try:
+        import PyPDF2
+        print(f"📄 Loading PDF file: {filepath}")
+        
+        with open(filepath, 'rb') as f:
+            pdf_reader = PyPDF2.PdfReader(f)
+            text_content = []
+            
+            for page_num in range(len(pdf_reader.pages)):
+                page = pdf_reader.pages[page_num]
+                text = page.extract_text()
+                if text:
+                    # Split by sentences (simple approach)
+                    sentences = text.replace('\n', ' ').split('. ')
+                    text_content.extend([s.strip() + '.' for s in sentences if len(s.strip()) > 20])
+            
+            print(f"📝 Extracted {len(text_content)} text segments from PDF")
+            return text_content
+    except ImportError:
+        print("❌ PyPDF2 not installed. Install with: pip3 install PyPDF2")
+        return []
+    except Exception as e:
+        print(f"❌ Failed to load PDF file: {e}")
+        return []
+
+def load_text_file(filepath):
+    """Load text from plain text file"""
+    try:
+        print(f"📄 Loading text file: {filepath}")
+        
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Split by paragraphs or sentences
+        if '\n\n' in content:
+            # Split by paragraphs
+            segments = [p.strip() for p in content.split('\n\n') if len(p.strip()) > 50]
+        else:
+            # Split by sentences
+            segments = [s.strip() + '.' for s in content.split('. ') if len(s.strip()) > 20]
+        
+        print(f"📝 Loaded {len(segments)} text segments")
+        return segments
+    except Exception as e:
+        print(f"❌ Failed to load text file: {e}")
+        return []
+
+def load_document(filepath):
+    """Auto-detect file type and load content"""
+    import os
+    
+    if not os.path.exists(filepath):
+        print(f"❌ File not found: {filepath}")
+        return []
+    
+    # Detect file type by extension
+    ext = os.path.splitext(filepath)[1].lower()
+    
+    if ext == '.srt':
+        return load_srt_file(filepath)
+    elif ext == '.pdf':
+        return load_pdf_file(filepath)
+    elif ext in ['.txt', '.md', '.text']:
+        return load_text_file(filepath)
+    else:
+        print(f"⚠️  Unknown file type: {ext}")
+        print("Supported: .srt, .pdf, .txt, .md")
+        print("Trying to load as plain text...")
+        return load_text_file(filepath)
+
 def initialize_rag(subtitle_path, use_local=True):
     """Initialize RAG system with subtitle content"""
     global RAG_CHUNKS, RAG_EMBEDDINGS, RAG_MODEL
     
     print(f"🔧 Initializing RAG with {subtitle_path}...")
     
-    # Load subtitles
-    dialogues = load_srt_file(subtitle_path)
+    # Load document (auto-detects file type)
+    dialogues = load_document(subtitle_path)
     if not dialogues:
-        print("⚠️  No dialogues loaded, using basic facts only")
+        print("⚠️  No content loaded, using basic facts only")
         return False
     
-    print(f"📝 Loaded {len(dialogues)} dialogues")
+    print(f"📝 Loaded {len(dialogues)} text segments")
     
     # Chunk dialogues
     RAG_CHUNKS = chunk_dialogues(dialogues, chunk_size=10)

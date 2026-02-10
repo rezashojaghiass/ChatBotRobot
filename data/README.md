@@ -1,6 +1,11 @@
-# How to Get Madagascar Subtitle File
+# How to Get Knowledge Base Files
 
-The Madagascar quiz mode requires a subtitle file (.srt format) to use as the knowledge base for RAG (Retrieval-Augmented Generation).
+The quiz mode requires a knowledge base file for RAG (Retrieval-Augmented Generation).
+
+**Supported formats:**
+- ✅ **SRT** - Subtitle files (.srt)
+- ✅ **PDF** - PDF documents (.pdf)
+- ✅ **TXT** - Plain text files (.txt, .md)
 
 ## Legal Notice
 
@@ -183,24 +188,72 @@ python3 voice_chat_riva_aws.py --subtitle ../data/YourMovie.srt --rag --mode mad
 # You may want to rename --mode to match your movie, or just use "chat" mode
 ```
 
-## Verify Subtitle File
+## Option 5: Use PDF Documents
 
-After downloading, verify the format:
+For educational content (science, history, etc.):
+
+```bash
+# Example: Galaxy science textbook
+# Save PDF to: /mnt/nvme/adrian/ChatBotRobot/data/Galaxy_Science.pdf
+
+# Install PDF support:
+pip3 install PyPDF2
+
+# Use with:
+python3 voice_chat_riva_aws.py \
+    --subtitle ../data/Galaxy_Science.pdf \
+    --topic "space and galaxies" \
+    --rag \
+    --mode madagascar_quiz \
+    --llm llama70b
+```
+
+## Option 6: Use Plain Text Files
+
+For articles, stories, or educational content:
+
+```bash
+# Create a text file with your content
+cat > data/dinosaurs.txt << 'EOF'
+Dinosaurs were reptiles that lived millions of years ago.
+
+The Tyrannosaurus Rex was one of the largest carnivores.
+It had powerful jaws and sharp teeth.
+
+The Triceratops had three horns and a large frill.
+It was a herbivore that ate plants.
+
+Velociraptors were small but intelligent hunters.
+They likely hunted in packs.
+EOF
+
+# Use with:
+python3 voice_chat_riva_aws.py \
+    --subtitle ../data/dinosaurs.txt \
+    --topic "dinosaurs" \
+    --rag \
+    --mode madagascar_quiz \
+    --llm llama70b
+```
+
+## Verify File
+
+After downloading/creating, verify the content:
 
 ```bash
 cd /mnt/nvme/adrian/ChatBotRobot/data
 
-# Check first few lines
+# For SRT files
 head -20 Madagascar.srt
+# Should see subtitle format
 
-# Should see format like:
-# 1
-# 00:00:01,000 --> 00:00:03,500
-# Dialogue text here
-# 
-# 2
-# 00:00:03,600 --> 00:00:05,200
-# More dialogue
+# For PDF files
+pip3 install PyPDF2
+python3 -c "import PyPDF2; f=open('Galaxy_Science.pdf','rb'); print(f'Pages: {len(PyPDF2.PdfReader(f).pages)}')"
+
+# For text files
+head -20 dinosaurs.txt
+# Should see your text content
 ```
 
 ## Troubleshooting

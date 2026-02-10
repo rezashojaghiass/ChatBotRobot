@@ -101,11 +101,14 @@ python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama 
 
 ### Custom Topic Quiz (e.g., Space Science)
 ```bash
-# Galaxy science quiz with custom subtitle file
-python3 voice_chat_riva_aws.py --subtitle ../data/Galaxy_Science.srt --rag --mode madagascar_quiz --llm llama70b --topic "space and galaxies" --quiz_len 10
+# Galaxy science quiz with PDF textbook
+python3 voice_chat_riva_aws.py --subtitle ../data/Galaxy_Science.pdf --rag --mode madagascar_quiz --llm llama70b --topic "space and galaxies" --quiz_len 10
 
-# Toy Story quiz
+# Toy Story quiz with subtitles
 python3 voice_chat_riva_aws.py --subtitle ../data/Toy_Story.srt --rag --mode madagascar_quiz --llm llama70b --topic "Toy Story movie" --quiz_len 10
+
+# Dinosaur quiz with text file
+python3 voice_chat_riva_aws.py --subtitle ../data/dinosaurs.txt --rag --mode madagascar_quiz --llm llama70b --topic "dinosaurs" --quiz_len 10
 ```
 
 ### Custom Announcements
@@ -123,7 +126,7 @@ python3 scripts/speak.py "Bravo Adrian for tidying up your toys!"
 --kid_name Adrian         # Child's name
 --topic "Madagascar movie" # Quiz topic (any subject!)
 --no-vad                  # Disable voice activity detection
---subtitle <path>         # Custom subtitle file path
+--subtitle <path>         # Knowledge file (.srt, .pdf, .txt)
 ```
 
 ## 📁 Project Structure

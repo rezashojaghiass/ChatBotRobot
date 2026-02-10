@@ -19,6 +19,9 @@ transformers>=4.0.0  # Required by sentence-transformers
 # Numerical Computing
 numpy
 
+# PDF Support (optional)
+PyPDF2  # For loading PDF documents
+
 # Optional: Development/Testing
 # pydub  # For audio file manipulation
 # soundfile  # For audio I/O
