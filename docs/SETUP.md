@@ -62,9 +62,15 @@ sudo apt-cache show nvidia-jetpack
 nvcc --version
 # Expected: CUDA 11.4
 
-# Check GPU
-nvidia-smi
-# Expected: GPU 0: Xavier (UUID: ...)
+# Check GPU and system stats
+sudo tegrastats --interval 1000 --logfile /dev/null
+# Press Ctrl+C after a few seconds
+# Expected: Shows RAM, CPU, GPU usage
+
+# Or install jtop (better visualization)
+sudo pip3 install -U jetson-stats
+sudo jtop
+# Expected: Interactive dashboard showing GPU, CPU, memory
 ```
 
 ### 3. Set Up Storage
@@ -369,7 +375,7 @@ Before proceeding, verify:
 
 - [ ] JetPack 5.x installed (L4T R35.6.3)
 - [ ] CUDA 11.4 working (`nvcc --version`)
-- [ ] GPU accessible (`nvidia-smi`)
+- [ ] GPU accessible (`sudo tegrastats` or `sudo jtop`)
 - [ ] NVMe SSD mounted at `/mnt/nvme`
 - [ ] VNC server running (optional)
 - [ ] Docker installed and GPU-enabled

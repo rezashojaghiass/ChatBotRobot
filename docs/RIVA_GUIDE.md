@@ -223,9 +223,14 @@ docker logs riva-speech
 
 # Expected: "Riva Speech server started" messages
 
-# Check GPU usage
-nvidia-smi
-# Expected: riva-speech-server process using ~2-3GB GPU memory
+# Check GPU and memory usage
+sudo tegrastats --interval 1000
+# Press Ctrl+C after a few seconds
+# Expected: Shows GPU usage and memory consumption
+
+# Or use jtop for better visualization
+sudo jtop
+# Navigate to GPU tab to see Riva memory usage (~2-3GB)
 ```
 
 ### 3. Make Scripts for Easy Control
@@ -323,7 +328,8 @@ docker exec riva-speech curl -s localhost:8000/v2/models
 
 ```bash
 # Check Docker GPU access
-docker run --rm --gpus all nvidia/cuda:11.4.0-base-ubuntu20.04 nvidia-smi
+docker run --rm --runtime nvidia nvcr.io/nvidia/l4t-base:r35.4.1 cat /proc/device-tree/model
+# Should show: Jetson AGX Xavier
 
 # If error, reinstall NVIDIA Container Runtime
 sudo apt install nvidia-container-runtime
@@ -408,8 +414,9 @@ docker exec riva-speech curl -s localhost:8000/v2/models | grep tts
 **Solutions:**
 ```bash
 # 1. Check GPU usage
-nvidia-smi
-# If GPU not at 100%, good
+sudo tegrastats --interval 1000
+# Press Ctrl+C after checking
+# Look for GR3D (GPU) usage - if not at 100%, good
 
 # 2. Optimize Jetson power mode
 sudo nvpmodel -m 0  # MAXN mode (maximum performance)
