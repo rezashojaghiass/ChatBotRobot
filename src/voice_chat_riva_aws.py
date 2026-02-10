@@ -454,8 +454,8 @@ def query_bedrock_json(system_prompt, user_input, model_id="meta.llama3-8b-instr
         print(f"❌ AWS Bedrock error: {e}")
         return None
 
-def quiz_tutor_call(kid_name, quiz_state, model_id="meta.llama3-8b-instruct-v1:0", region="us-east-1", use_rag=False):
-    """Buzz Lightyear asks next Madagascar quiz question (returns JSON)"""
+def quiz_tutor_call(kid_name, quiz_state, model_id="meta.llama3-8b-instruct-v1:0", region="us-east-1", use_rag=False, topic="the Madagascar movie"):
+    """Buzz Lightyear asks next quiz question (returns JSON)\"\"\"
     print("🎓 Tutor: Generating question...")
     
     # Calculate difficulty based on progress
@@ -472,15 +472,15 @@ def quiz_tutor_call(kid_name, quiz_state, model_id="meta.llama3-8b-instruct-v1:0
     
     # Get context (RAG or basic facts)
     if use_rag and RAG_CHUNKS:
-        context = get_relevant_context(f"Madagascar movie question {quiz_state['question_idx']}")
+        context = get_relevant_context(f"{topic} question {quiz_state['question_idx']}")
         context_label = "RAG context"
     else:
         context = MADAGASCAR_FACTS
         context_label = "facts"
     
-    system_prompt = f"""You are Buzz Lightyear tutoring {kid_name} about the Madagascar movie.
+    system_prompt = f"""You are Buzz Lightyear tutoring {kid_name} about {topic}.
 You are ENTHUSIASTIC, ENCOURAGING, and EXCITED! Use phrases like "To infinity and beyond!", "Great job Space Ranger!", "Fantastic!".
-Ask ONE question at a time about Madagascar.
+Ask ONE question at a time about {topic}.
 {difficulty_instruction}
 Use ONLY these {context_label}: {context}
 Keep it kid-friendly and fun.
@@ -525,7 +525,7 @@ Generate next question (question #{quiz_state['question_idx'] + 1})."""
         print(f"Raw response: {raw_response[:200]}")
         return None
 
-def quiz_judge_call(user_answer, expected_answers, last_question="", model_id="meta.llama3-8b-instruct-v1:0", region="us-east-1", use_rag=False):
+def quiz_judge_call(user_answer, expected_answers, last_question="", model_id="meta.llama3-8b-instruct-v1:0", region="us-east-1", use_rag=False, topic="the Madagascar movie"):
     """Grade user's answer (returns JSON with is_correct, feedback, etc.)"""
     print("⚖️  Judge: Grading answer...")
     
@@ -631,6 +631,8 @@ def main():
     parser.add_argument("--rag", action="store_true", help="Enable RAG with subtitle file")
     parser.add_argument("--subtitle", default="/mnt/nvme/adrian/riva/Madagascar.720p.CHD.en.srt",
                         help="Path to subtitle file for RAG")
+    parser.add_argument("--topic", default="the Madagascar movie",
+                        help="Quiz topic (e.g., 'space and galaxies', 'Toy Story movie', etc.)")
     args = parser.parse_args()
     
     # Map LLM provider to model ID
@@ -689,7 +691,7 @@ def run_chat_mode(args):
         print("\n\n👋 Goodbye!")
 
 def run_quiz_mode(args):
-    """Madagascar quiz mode with Buzz Lightyear"""
+    """Quiz mode with Buzz Lightyear on any topic"""
     
     # Initialize quiz state
     quiz_state = {
@@ -703,7 +705,7 @@ def run_quiz_mode(args):
     }
     
     # Introduction
-    intro = f"Space Ranger {args.kid_name}, ready for a Madagascar mission? I'll quiz you on the movie! To infinity and beyond!"
+    intro = f"Space Ranger {args.kid_name}, ready for a mission about {args.topic}? I'll quiz you! To infinity and beyond!"
     print(f"🎬 Quiz starting...")
     speak_riva(intro, server=args.server)
     
@@ -715,13 +717,13 @@ def run_quiz_mode(args):
             print('='*60 + '\n')
             
             # Step 1: Tutor asks question
-            tutor_result = quiz_tutor_call(args.kid_name, quiz_state, args.model, args.region, use_rag=args.rag)
+            tutor_result = quiz_tutor_call(args.kid_name, quiz_state, args.model, args.region, use_rag=args.rag, topic=args.topic)
             
             if not tutor_result:
                 # Retry once
                 print("⚠️  Retrying question generation...")
                 time.sleep(1)
-                tutor_result = quiz_tutor_call(args.kid_name, quiz_state, args.model, args.region, use_rag=args.rag)
+                tutor_result = quiz_tutor_call(args.kid_name, quiz_state, args.model, args.region, use_rag=args.rag, topic=args.topic)
                 
             if not tutor_result or 'say' not in tutor_result or 'expected' not in tutor_result:
                 print("❌ Failed to generate question, skipping...")
@@ -760,7 +762,8 @@ def run_quiz_mode(args):
                 quiz_state["last_question"],
                 args.model, 
                 args.region,
-                use_rag=args.rag
+                use_rag=args.rag,
+                topic=args.topic
             )
             
             if not judge_result:
@@ -773,7 +776,8 @@ def run_quiz_mode(args):
                     quiz_state["last_question"],
                     args.model,
                     args.region,
-                    use_rag=args.rag
+                    use_rag=args.rag,
+                    topic=args.topic
                 )
             
             if not judge_result or 'is_correct' not in judge_result:

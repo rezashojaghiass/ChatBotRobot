@@ -107,7 +107,8 @@ python3 voice_chat_riva_aws.py \
     --mode madagascar_quiz \
     --llm llama70b \
     --rag \
-    --quiz_len 10
+    --quiz_len 10 \
+    --topic "the Madagascar movie"
 
 # Quiz flow:
 # 1. Buzz asks a question
@@ -136,16 +137,22 @@ python3 voice_chat_riva_aws.py --mode chat --llm claude
 
 ```bash
 # Quiz with RAG (accurate questions)
-python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama70b --rag
+python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama70b --rag --topic "the Madagascar movie"
 
 # Quiz without RAG (general questions)
-python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama
+python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama --topic "the Madagascar movie"
 
 # Short quiz (5 questions)
-python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama70b --quiz_len 5
+python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama70b --quiz_len 5 --topic "the Madagascar movie"
 
 # Custom name
-python3 voice_chat_riva_aws.py --mode madagascar_quiz --kid_name John --llm llama70b
+python3 voice_chat_riva_aws.py --mode madagascar_quiz --kid_name John --llm llama70b --topic "the Madagascar movie"
+
+# Galaxy science quiz with custom subtitle
+python3 voice_chat_riva_aws.py --subtitle ../data/Galaxy_Science.srt --rag --mode madagascar_quiz --llm llama70b --topic "space and galaxies"
+
+# Toy Story quiz
+python3 voice_chat_riva_aws.py --subtitle ../data/Toy_Story.srt --rag --mode madagascar_quiz --llm llama70b --topic "Toy Story movie"
 ```
 
 ### Audio Settings
@@ -249,6 +256,7 @@ Options:
   --rag                   Enable RAG with subtitles
   --quiz_len N            Number of quiz questions (default: 10)
   --kid_name NAME         Child's name (default: Adrian)
+  --topic TOPIC           Quiz topic (default: "the Madagascar movie")
   --no-vad                Disable voice activity detection
   --subtitle PATH         Custom subtitle file path
 
@@ -256,11 +264,11 @@ Examples:
   # Chat with Llama 8B
   python3 voice_chat_riva_aws.py --mode chat --llm llama
   
-  # Quiz with Llama 70B and RAG
-  python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama70b --rag
+  # Madagascar quiz with RAG
+  python3 voice_chat_riva_aws.py --mode madagascar_quiz --llm llama70b --rag --topic "the Madagascar movie"
   
-  # Short quiz, custom name
-  python3 voice_chat_riva_aws.py --mode madagascar_quiz --quiz_len 5 --kid_name Sarah
+  # Galaxy science quiz
+  python3 voice_chat_riva_aws.py --subtitle ../data/Galaxy_Science.srt --mode madagascar_quiz --llm llama70b --rag --topic "space and galaxies" --quiz_len 5
 ```
 
 ## Performance Tips

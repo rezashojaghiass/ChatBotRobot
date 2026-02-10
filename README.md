@@ -71,7 +71,7 @@ aws configure
 
 # 5. Run Madagascar quiz
 cd src
-python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6
+python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6 --topic "the Madagascar movie"
 ```
 
 ## 📖 Detailed Setup Guide
@@ -93,10 +93,19 @@ python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama70b
 ### Madagascar Quiz Mode
 ```bash
 # With RAG (uses subtitles)
-python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 10
+python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 10 --topic "the Madagascar movie"
 
 # Without RAG (basic facts)
-python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama
+python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama --topic "the Madagascar movie"
+```
+
+### Custom Topic Quiz (e.g., Space Science)
+```bash
+# Galaxy science quiz with custom subtitle file
+python3 voice_chat_riva_aws.py --subtitle ../data/Galaxy_Science.srt --rag --mode madagascar_quiz --llm llama70b --topic "space and galaxies" --quiz_len 10
+
+# Toy Story quiz
+python3 voice_chat_riva_aws.py --subtitle ../data/Toy_Story.srt --rag --mode madagascar_quiz --llm llama70b --topic "Toy Story movie" --quiz_len 10
 ```
 
 ### Custom Announcements
@@ -112,6 +121,7 @@ python3 scripts/speak.py "Bravo Adrian for tidying up your toys!"
 --rag                     # Enable RAG with subtitle context
 --quiz_len 10             # Number of quiz questions
 --kid_name Adrian         # Child's name
+--topic "Madagascar movie" # Quiz topic (any subject!)
 --no-vad                  # Disable voice activity detection
 --subtitle <path>         # Custom subtitle file path
 ```
