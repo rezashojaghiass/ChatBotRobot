@@ -2,6 +2,29 @@
 
 Get your ChatBot Robot running in 5 minutes!
 
+## 🔄 Coming Back After a Break?
+
+**Quick reminder of where things are:**
+
+```bash
+# 1. Go to your repository
+cd /mnt/nvme/adrian/ChatBotRobot
+
+# 2. Check if Riva is running
+docker ps | grep riva-speech
+
+# 3. If not running, start it:
+./scripts/start_riva.sh
+
+# 4. Run the voice chat
+cd src
+python3 voice_chat_riva_aws.py --mode chat --llm llama70b
+
+# That's it! 🚀
+```
+
+---
+
 ## Prerequisites
 
 - NVIDIA Jetson AGX Xavier with JetPack 5.x
@@ -81,7 +104,8 @@ cd ../scripts
 ## Step 6: Run Chat Mode
 
 ```bash
-cd ../src
+# Always work from the repository directory
+cd /mnt/nvme/adrian/ChatBotRobot/src
 
 # Basic chat with Buzz Lightyear
 python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama
@@ -98,8 +122,10 @@ python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama
 ## Step 7: Run Quiz Mode (Optional)
 
 ```bash
+# Still in /mnt/nvme/adrian/ChatBotRobot/src
+
 # Download Madagascar subtitles (see data/README.md)
-# Save to: data/Madagascar.srt
+# Save to: ../data/Madagascar.srt
 
 # Run quiz with RAG
 python3 voice_chat_riva_aws.py \
@@ -170,7 +196,12 @@ python3 voice_chat_riva_aws.py --subtitle /path/to/subtitles.srt --rag
 
 ### Utility Scripts
 
+**Important: Run these from the repository directory!**
+
 ```bash
+# Always start from the repo
+cd /mnt/nvme/adrian/ChatBotRobot
+
 # Speak a message
 ./scripts/speak.py "Bravo Adrian!"
 

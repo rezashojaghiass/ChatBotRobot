@@ -85,6 +85,12 @@ See [docs/SETUP.md](docs/SETUP.md) for complete installation instructions includ
 
 ## 💻 Usage Examples
 
+**Working directory: Always run from `/mnt/nvme/adrian/ChatBotRobot/src`**
+
+```bash
+cd /mnt/nvme/adrian/ChatBotRobot/src
+```
+
 ### Chat Mode (Buzz Lightyear)
 ```bash
 python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama70b
@@ -113,7 +119,9 @@ python3 voice_chat_riva_aws.py --subtitle ../data/dinosaurs.txt --rag --mode mad
 
 ### Custom Announcements
 ```bash
-python3 scripts/speak.py "Bravo Adrian for tidying up your toys!"
+# Run from repository root
+cd /mnt/nvme/adrian/ChatBotRobot
+./scripts/speak.py "Bravo Adrian for tidying up your toys!"
 ```
 
 ### All CLI Options
