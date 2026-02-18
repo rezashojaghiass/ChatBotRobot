@@ -206,10 +206,10 @@ ChatBotRobot/
 
 ### Riva Container Won't Start
 ```bash
-# Check CUDA
-nvidia-smi
+# Check GPU and memory usage on Jetson
+sudo tegrastats
 # Verify Docker can access GPU
-docker run --rm --gpus all nvidia/cuda:11.4.0-base-ubuntu20.04 nvidia-smi
+docker run --rm --runtime nvidia nvidia/cuda:11.4.0-base-ubuntu20.04 tegrastats --interval 1000 --logfile /dev/stdout
 ```
 
 ### Audio Issues
