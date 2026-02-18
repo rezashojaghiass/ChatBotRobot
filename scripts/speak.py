@@ -2,12 +2,15 @@
 """
 Simple TTS utility script for one-off announcements.
 Usage: python3 speak.py "Message to speak"
+
+Fixed: Uses PyAudio instead of deprecated riva.client.AudioPlayer
 """
 
 import sys
 import riva.client
+import pyaudio
 
-def speak(text, voice="English-US.Male-1", sample_rate=16000):
+def speak(text, voice="English-US.Male-1", sample_rate=22050):
     """Speak text using Riva TTS."""
     try:
         # Connect to Riva server
@@ -24,10 +27,18 @@ def speak(text, voice="English-US.Male-1", sample_rate=16000):
             sample_rate_hz=sample_rate
         )
         
-        # Play audio using riva player
-        sound_stream = riva.client.AudioPlayer(sample_rate_hz=sample_rate)
-        sound_stream.push(resp.audio)
-        sound_stream.wait()
+        # Play audio using PyAudio (AudioPlayer is deprecated)
+        p = pyaudio.PyAudio()
+        stream = p.open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=sample_rate,
+            output=True
+        )
+        stream.write(resp.audio)
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
         
         print("Done!")
         

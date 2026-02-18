@@ -55,24 +55,41 @@ numpy
 
 ## 🚀 Quick Start
 
+**Prerequisites**: Docker must be installed and running. Riva runs in a Docker container.
+
 ```bash
 # 1. Clone repository
 git clone https://github.com/rezashojaghiass/ChatBotRobot.git
 cd ChatBotRobot
 
-# 2. Run setup script
-./scripts/setup.sh
+# 2. Install Python dependencies
+pip3 install -r requirements.txt
 
-# 3. Configure AWS credentials
+# 3. Set Jetson to MAXN power mode for optimal GPU memory allocation
+sudo nvpmodel -m 0
+sudo jetson_clocks
+
+# 4. Configure AWS credentials
 aws configure
 
-# 4. Start Riva server
+# 5. Install and start NVIDIA Riva (first time only - see docs/RIVA_GUIDE.md)
+# Download Riva QuickStart, configure, and initialize models
+# Then start the Docker container:
 ./scripts/start_riva.sh
 
-# 5. Run Madagascar quiz
+# 6. Verify Riva is running
+docker ps | grep riva-speech
+
+# 7. Configure speaker volume (if no audio output)
+aplay -l  # List audio devices to find card number
+amixer -c 1 set Headphone 100% unmute  # Replace '1' with your card number
+
+# 8. Run Madagascar quiz
 cd src
 python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6 --topic "the Madagascar movie"
 ```
+
+**Note**: After installing ROS2 or other memory-intensive packages, reboot the system before starting Riva to clear memory fragmentation.
 
 ## 📖 Detailed Setup Guide
 
