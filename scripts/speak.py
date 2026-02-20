@@ -3,21 +3,21 @@
 Simple TTS utility script for one-off announcements.
 Usage: python3 speak.py "Message to speak"
 
-Fixed: Uses PyAudio instead of deprecated riva.client.AudioPlayer
+Fixed: Uses PyAudio with device 1 and 48000Hz sample rate
 """
 
 import sys
 import riva.client
 import pyaudio
 
-def speak(text, voice="English-US.Male-1", sample_rate=22050):
+def speak(text, voice="English-US.Male-1", sample_rate=48000):
     """Speak text using Riva TTS."""
     try:
         # Connect to Riva server
         auth = riva.client.Auth(uri='localhost:50051')
         tts_service = riva.client.SpeechSynthesisService(auth)
         
-        # Synthesize speech
+        # Synthesize speech at 48000Hz (USB Audio native rate)
         print(f"Speaking: {text}")
         resp = tts_service.synthesize(
             text=text,
@@ -27,13 +27,14 @@ def speak(text, voice="English-US.Male-1", sample_rate=22050):
             sample_rate_hz=sample_rate
         )
         
-        # Play audio using PyAudio (AudioPlayer is deprecated)
+        # Play audio using PyAudio on KT USB Audio (device 1)
         p = pyaudio.PyAudio()
         stream = p.open(
             format=pyaudio.paInt16,
             channels=1,
             rate=sample_rate,
-            output=True
+            output=True,
+            output_device_index=1  # KT USB Audio
         )
         stream.write(resp.audio)
         stream.stop_stream()
