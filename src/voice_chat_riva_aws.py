@@ -658,7 +658,7 @@ Grade the answer."""
         print(f"Raw response: {raw_response[:200]}")
         return None
 
-def speak_riva(text, server="localhost:50051", rate=22050):
+def speak_riva(text, server="localhost:50051", rate=48000, output_device_index=1):
     """Synthesize and play speech using Riva TTS"""
     print("🔊 Speaking...")
     
@@ -675,9 +675,15 @@ def speak_riva(text, server="localhost:50051", rate=22050):
     
     audio_data = resp.audio
     
-    # Play audio
+    # Play audio via explicit output device (USB speaker is usually index 1).
     p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=rate, output=True)
+    stream = p.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=rate,
+        output=True,
+        output_device_index=output_device_index,
+    )
     stream.write(audio_data)
     stream.stop_stream()
     stream.close()
@@ -696,6 +702,7 @@ def main():
     parser.add_argument("--duration", type=int, default=5, help="Recording duration in seconds")
     parser.add_argument("--no-vad", action="store_true", help="Disable voice activity detection (use fixed duration)")
     parser.add_argument("--device", type=int, default=None, help="Audio input device index")
+    parser.add_argument("--output-device", type=int, default=1, help="Audio output device index (USB speaker is usually 1)")
     parser.add_argument("--mode", default="chat", choices=["chat", "madagascar_quiz"],
                         help="Mode: chat or madagascar_quiz")
     parser.add_argument("--kid_name", default="Adrian", help="Kid's name for quiz mode")
@@ -755,7 +762,7 @@ def run_chat_mode(args):
             response = query_aws_bedrock(text, model_id=args.model, region=args.region)
             
             # Speak
-            speak_riva(response, server=args.server)
+            speak_riva(response, server=args.server, output_device_index=args.output_device)
             
             print("\n" + "="*60 + "\n")
             
@@ -779,7 +786,7 @@ def run_quiz_mode(args):
     # Introduction
     intro = f"Space Ranger {args.kid_name}, ready for a mission about {args.topic}? I'll quiz you! To infinity and beyond!"
     print(f"🎬 Quiz starting...")
-    speak_riva(intro, server=args.server)
+    speak_riva(intro, server=args.server, output_device_index=args.output_device)
     
     try:
         while quiz_state["question_idx"] < quiz_state["max_questions"]:
@@ -799,7 +806,7 @@ def run_quiz_mode(args):
                 
             if not tutor_result or 'say' not in tutor_result or 'expected' not in tutor_result:
                 print("❌ Failed to generate question, skipping...")
-                speak_riva("Oops! Let's try that again!", server=args.server)
+                speak_riva("Oops! Let's try that again!", server=args.server, output_device_index=args.output_device)
                 continue
             
             # Store question and expected answers
@@ -807,7 +814,7 @@ def run_quiz_mode(args):
             quiz_state["last_expected"] = tutor_result.get("expected", [])
             
             # Speak the question
-            speak_riva(tutor_result["say"], server=args.server)
+            speak_riva(tutor_result["say"], server=args.server, output_device_index=args.output_device)
             
             # Step 2: Record and transcribe user's answer (VAD enabled by default)
             if not args.no_vad:
@@ -818,7 +825,7 @@ def run_quiz_mode(args):
             
             # Guard: empty or too short
             if not user_answer or len(user_answer.strip()) < 3:
-                speak_riva("I didn't catch that, say it again!", server=args.server)
+                speak_riva("I didn't catch that, say it again!", server=args.server, output_device_index=args.output_device)
                 continue
             
             # Guard: exit intent
@@ -854,7 +861,7 @@ def run_quiz_mode(args):
             
             if not judge_result or 'is_correct' not in judge_result:
                 print("❌ Failed to grade, skipping...")
-                speak_riva("Hmm, let me think about that one...", server=args.server)
+                speak_riva("Hmm, let me think about that one...", server=args.server, output_device_index=args.output_device)
                 continue
             
             # Step 4: Process result and give feedback
@@ -865,11 +872,11 @@ def run_quiz_mode(args):
             if is_correct:
                 quiz_state["score"] += 1
                 quiz_state["streak"] += 1
-                speak_riva(feedback, server=args.server)
+                speak_riva(feedback, server=args.server, output_device_index=args.output_device)
             else:
                 quiz_state["streak"] = 0
                 full_feedback = f"{feedback} {hint}".strip()
-                speak_riva(full_feedback, server=args.server)
+                speak_riva(full_feedback, server=args.server, output_device_index=args.output_device)
             
             # Update history summary (keep it short)
             summary_entry = f"Q: {quiz_state['last_question'][:30]}... A: {user_answer[:20]} ({'✓' if is_correct else '✗'}). "
@@ -885,7 +892,7 @@ def run_quiz_mode(args):
         print('='*60 + '\n')
         
         wrap_up = f"Great job {args.kid_name}! You got {quiz_state['score']} out of {quiz_state['max_questions']} questions correct! To infinity and beyond!"
-        speak_riva(wrap_up, server=args.server)
+        speak_riva(wrap_up, server=args.server, output_device_index=args.output_device)
         
     except KeyboardInterrupt:
         print("\n\n👋 Quiz ended early!")

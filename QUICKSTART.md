@@ -18,7 +18,8 @@ docker ps | grep riva-speech
 
 # 4. Run the voice chat
 cd src
-python3 voice_chat_riva_aws.py --mode chat --llm llama70b
+# Note: USB speaker is usually output device 1
+python3 voice_chat_riva_aws.py --mode chat --llm llama70b --output-device 1
 
 # That's it! 🚀
 ```
@@ -108,7 +109,7 @@ cd ../scripts
 cd /mnt/nvme/adrian/ChatBotRobot/src
 
 # Basic chat with Buzz Lightyear
-python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama
+python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama --output-device 1
 
 # Conversation flow:
 # 1. Speak: "Hello Buzz!"
