@@ -18,8 +18,8 @@ docker ps | grep riva-speech
 
 # 4. Run the voice chat
 cd src
-# Note: USB speaker is usually output device 1
-python3 voice_chat_riva_aws.py --mode chat --llm llama70b --output-device 1
+# Note: output device index can change. On this setup, KT USB Audio is device 25.
+python3 voice_chat_riva_aws.py --mode chat --llm llama70b --output-device 25
 
 # That's it! 🚀
 ```
@@ -92,6 +92,9 @@ cd src
 # List audio devices
 python3 list_audio_devices.py
 
+# List OUTPUT device indexes (pick KT USB Audio index, e.g. 25)
+python3 -c "import pyaudio as p; a=p.PyAudio(); [print(f\"{i}: {a.get_device_info_by_index(i)['name']}\") for i in range(a.get_device_count()) if a.get_device_info_by_index(i).get('maxOutputChannels',0)>0]; a.terminate()"
+
 # Test microphone
 arecord -f S16_LE -r 16000 -c 1 -d 3 test.wav && aplay test.wav && rm test.wav
 # Speak and you should hear yourself
@@ -109,7 +112,7 @@ cd ../scripts
 cd /mnt/nvme/adrian/ChatBotRobot/src
 
 # Basic chat with Buzz Lightyear
-python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama --output-device 1
+python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama --output-device 25
 
 # Conversation flow:
 # 1. Speak: "Hello Buzz!"

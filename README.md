@@ -99,8 +99,8 @@ docker ps | grep riva-speech
 
 # 3. Run Madagascar quiz
 cd src
-# Note: USB speaker is usually output device 1
-python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6 --topic "the Madagascar movie" --output-device 1
+# Note: output device index can change. On this setup, KT USB Audio is device 25.
+python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6 --topic "the Madagascar movie" --output-device 25
 ```
 
 ## 📖 Detailed Setup Guide
