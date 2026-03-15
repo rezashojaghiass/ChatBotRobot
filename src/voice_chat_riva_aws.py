@@ -229,16 +229,23 @@ def record_audio(duration=5, rate=16000, device_index=None):
     """Record audio from microphone"""
     p = pyaudio.PyAudio()
     
-    # If no device specified, try to find Wireless GO II
+    # If no device specified, try to find Wireless GO II or use device 2 (hw:2,0)
     if device_index is None:
         for i in range(p.get_device_count()):
             info = p.get_device_info_by_index(i)
-            if 'Wireless GO II' in info['name'] and info['maxInputChannels'] > 0:
+            # Check for RODE Wireless GO II or generic RODE device
+            if ('RODE' in info['name'] or 'Wireless GO II' in info['name']) and info['maxInputChannels'] > 0:
                 device_index = i
-                print(f"✓ Found Wireless GO II on device {i}")
+                print(f"✓ Found {info['name']} on device {i}")
                 break
+        # Fallback to device 2 if available (hw:2,0)
+        if device_index is None and p.get_device_count() > 2:
+            info = p.get_device_info_by_index(2)
+            if info['maxInputChannels'] > 0:
+                device_index = 2
+                print(f"✓ Using fallback device 2: {info['name']}")
     
-    # Wireless GO II is 48kHz, need to resample to 16kHz
+    # RODE Wireless GO II is 48kHz, need to resample to 16kHz
     hw_rate = 48000
     stream = p.open(
         format=pyaudio.paInt16,
@@ -274,16 +281,22 @@ def record_audio_vad(max_duration=10, rate=16000, device_index=None, silence_thr
     
     p = pyaudio.PyAudio()
     
-    # If no device specified, try to find Wireless GO II
+    # If no device specified, try to find RODE Wireless GO II or use device 2
     if device_index is None:
         for i in range(p.get_device_count()):
             info = p.get_device_info_by_index(i)
-            if 'Wireless GO II' in info['name'] and info['maxInputChannels'] > 0:
+            if ('RODE' in info['name'] or 'Wireless GO II' in info['name']) and info['maxInputChannels'] > 0:
                 device_index = i
-                print(f"✓ Found Wireless GO II on device {i}")
+                print(f"✓ Found {info['name']} on device {i}")
                 break
+        # Fallback to device 2 if available (hw:2,0)
+        if device_index is None and p.get_device_count() > 2:
+            info = p.get_device_info_by_index(2)
+            if info['maxInputChannels'] > 0:
+                device_index = 2
+                print(f"✓ Using fallback device 2: {info['name']}")
     
-    # Wireless GO II is 48kHz, need to resample to 16kHz
+    # RODE Wireless GO II is 48kHz, need to resample to 16kHz
     hw_rate = 48000
     stream = p.open(
         format=pyaudio.paInt16,

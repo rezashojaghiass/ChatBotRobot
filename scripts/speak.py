@@ -27,14 +27,14 @@ def speak(text, voice="English-US.Male-1", sample_rate=48000):
             sample_rate_hz=sample_rate
         )
         
-        # Play audio using PyAudio on KT USB Audio (device 1)
+        # Play audio using PyAudio on KT USB Audio (device 0)
         p = pyaudio.PyAudio()
         stream = p.open(
             format=pyaudio.paInt16,
             channels=1,
             rate=sample_rate,
             output=True,
-            output_device_index=1  # KT USB Audio
+            output_device_index=0  # KT USB Audio
         )
         stream.write(resp.audio)
         stream.stop_stream()
