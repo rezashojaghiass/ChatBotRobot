@@ -3,6 +3,39 @@
 ## Overview
 This guide covers installing and configuring the RODE Wireless GO microphone on your NVIDIA Jetson Xavier.
 
+## Problem & Solution
+
+### The Problem
+When the RODE Wireless GO was first connected to your Xavier, it appeared in the system's USB device list (`lsusb`) but **was not recognized by the audio system**. The device couldn't be found by:
+- PyAudio library
+- ALSA tools (`arecord`)
+- Audio applications
+
+Even though the USB hardware was physically connected and detected, the operating system couldn't use it for audio because the necessary driver was missing.
+
+### Root Cause
+The **USB audio kernel module** (`snd_usb_audio`) was not loaded. This kernel module is responsible for:
+- Detecting USB audio devices
+- Registering them with ALSA (Advanced Linux Sound Architecture)
+- Making them available to applications
+
+Without this module, the kernel doesn't know how to communicate with USB microphones and headsets, regardless of whether they're physically connected.
+
+### The Solution
+1. **Load the USB audio driver**: `sudo modprobe snd_usb_audio`
+   - This loads the `snd_usb_audio` kernel module into memory
+   - RODE device immediately appears as Card 0 in ALSA
+   
+2. **Make it persistent**: Add the module to `/etc/modules`
+   - Ensures the driver loads automatically on every system boot
+   - No manual intervention needed after restart
+
+### Result
+After loading the driver, your RODE Wireless GO:
+- ✅ Appears in ALSA as "USB-Audio - KT USB Audio" (Card 0)
+- ✅ Becomes available to PyAudio and other audio libraries
+- ✅ Can be used with voice chat applications and audio capture tools
+
 ## Prerequisites
 - RODE Wireless GO microphone
 - USB adapter/connection to Jetson Xavier
