@@ -55,9 +55,13 @@ numpy
 
 ## 🚀 Quick Start
 
-**Prerequisites**: Docker must be installed and running. Riva runs in a Docker container.
+**Prerequisites**: 
+- Docker must be installed and running ✓ (Already on your system)
+- NVIDIA Docker runtime configured ✓ (Already enabled in daemon.json)
+- Riva models downloaded ✓ (Already in /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0)
+- Python dependencies installed ✓
 
-### First Time Setup
+### First Time Setup (One-time only)
 
 ```bash
 # 1. Clone repository
@@ -79,29 +83,166 @@ aws configure
 # - Configure config.sh with desired models
 # - Run riva_init.sh to download models (~10GB)
 # - This is a one-time setup
+# ✓ ALREADY DONE - Located at: /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
 
 # 6. Configure speaker volume
 aplay -l  # List audio devices to find card number
 amixer -c 1 set Headphone 100% unmute  # Replace '1' with your card number
 ```
 
-**Note**: After installing ROS2 or other memory-intensive packages, reboot the system before starting Riva to clear memory fragmentation.
+**System Info (Your Setup)**
+- JetPack: R35.6.3 ✓
+- Docker: 26.1.3 with NVIDIA runtime ✓
+- GPU: Confirmed working with TensorRT acceleration ✓
+- Storage: 2.9GB internal | 137GB /mnt/nvme ✓
 
 ### Running the Quiz (Every Time)
 
-```bash
-# 1. Start Riva Docker container
-cd /path/to/ChatBotRobot
-./scripts/start_riva.sh
+#### Step 1: Start Riva Docker Container with GPU
 
-# 2. Verify Riva is running
+```bash
+# Navigate to Riva installation directory
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
+
+# Start the container with GPU enabled
+bash start_riva_v2_14.sh
+# This runs the official startup script which:
+# - Removes any existing riva-speech container
+# - Starts new container with --gpus all flag (GPU acceleration enabled)
+# - Maps ports: gRPC (50051), HTTP (50000)
+# - Mounts prebuilt models from /data/models
+# - Enables ASR (Speech-to-Text) and TTS (Text-to-Speech) services
+# - Disables NLP service to save GPU memory
+# - Expected output: "✓ Riva server is running with GPU"
+```
+
+**Alternative: Manual Docker Command (if script not available)**
+```bash
+RIVA_DIR="/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0"
+MODEL_REPO="$RIVA_DIR/model_repository/prebuilt"
+IMAGE="nvcr.io/nvidia/riva/riva-speech:2.14.0-l4t-aarch64"
+CONTAINER="riva-speech"
+PORT_GRPC=50051
+PORT_HTTP=50000
+
+# Remove any existing container
+sudo docker rm -f $CONTAINER &> /dev/null
+
+# Start with GPU enabled
+sudo docker run -d \
+        --gpus all \
+        --init \
+        --ipc=host \
+        --device /dev/bus/usb \
+        --device /dev/snd \
+        -p $PORT_GRPC:$PORT_GRPC \
+        -p $PORT_HTTP:$PORT_HTTP \
+        -v $MODEL_REPO:/data/models \
+        --ulimit memlock=-1 \
+        --ulimit stack=67108864 \
+        --name $CONTAINER \
+        $IMAGE \
+        bash -c "/opt/riva/bin/start-riva --asr_service=true --tts_service=true --nlp_service=false"
+
+# Wait and verify
+sleep 5
+docker ps | grep $CONTAINER && echo "✓ Riva server is running" || echo "✗ Failed"
+```
+
+#### Step 2: Verify Riva is Running
+
+```bash
+# Check container is up
 docker ps | grep riva-speech
 
-# 3. Run Madagascar quiz
-cd src
+# Check logs to confirm models loaded
+docker logs riva-speech 2>&1 | grep -E "successfully loaded|listening on"
+
+# Expected output should include:
+# - "successfully loaded 'conformer-en-US-asr-streaming'" 
+# - "Riva Conversational AI Server listening on 0.0.0.0:50051"
+
+# Test Riva is responding (Python test)
+python3 << 'EOF'
+import riva.client
+auth = riva.client.Auth(uri="localhost:50051")
+tts = riva.client.SpeechSynthesisService(auth)
+resp = tts.synthesize("Hello, Riva is working", language_code="en-US", sample_rate_hz=16000)
+print("✓ Riva TTS working!" if resp.audio else "✗ TTS failed")
+EOF
+```
+
+#### Step 3: Run Madagascar Quiz
+
+```bash
+# Navigate to source code directory
+cd /home/reza/ChatBotRobot/src
 # Note: output device index can change. On this setup, KT USB Audio is device 25.
 python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6 --topic "the Madagascar movie" --output-device 25
 ```
+
+#### Step 4: Stop Riva (When Done)
+
+```bash
+# Stop the Riva container gracefully
+docker stop riva-speech
+
+# Verify it's stopped
+docker ps | grep riva-speech  # Should return nothing
+
+# Remove container to save disk space (optional)
+docker rm riva-speech
+```
+
+### Docker & GPU Verification Checklist
+
+Before running Riva each time, verify:
+
+```bash
+# 1. Check system resources
+tegrastats  # Should show ~6-8GB free RAM, CPU temps <50°C
+
+# 2. Verify Docker is running
+docker ps  # Should work without timeout
+
+# 3. Confirm GPU acceleration is configured
+docker info | grep nvidia  # Should show NVIDIA runtime
+
+# 4. Check Jetson is in MAXN power mode (optimal for inference)
+nvpmodel -q  # Should show "NVPmodel: ARMv8 Processor [mode: 0]"
+# If not in mode 0, run: sudo nvpmodel -m 0 && sudo jetson_clocks
+
+# 5. Check available disk space
+df -h /mnt/nvme  # Should have >50GB free (for Riva models)
+```
+
+### Common Docker Issues
+
+**Problem: "Cannot connect to Docker daemon"**
+```bash
+sudo systemctl restart docker
+# Or manually start: sudo dockerd &
+```
+
+**Problem: "NVIDIA runtime not found"**
+```bash
+# This is already configured, but if needed:
+docker run --rm --gpus all nvidia/cuda:11.4.0-base-ubuntu20.04 nvidia-smi
+```
+
+**Problem: Container exits immediately**
+```bash
+docker logs riva-speech  # Check error messages
+# Most common: Out of memory - run: sudo jetson_clocks first
+```
+
+**Problem: "Port 50051 already in use"**
+```bash
+# Kill existing Riva
+docker rm -f riva-speech
+# Or use different ports: -p 50052:50051 -p 50001:50000
+```
+
 
 ## 📖 Detailed Setup Guide
 
@@ -114,56 +255,55 @@ See [docs/SETUP.md](docs/SETUP.md) for complete installation instructions includ
 
 ## 💻 Usage Examples
 
-**Working directory: Always run from `/mnt/nvme/adrian/ChatBotRobot/src`**
+**Working directory: Always run from `/home/reza/ChatBotRobot/src`**
 
 ```bash
-cd /mnt/nvme/adrian/ChatBotRobot/src
+cd /home/reza/ChatBotRobot/src
 ```
 
 ### Chat Mode (Buzz Lightyear)
 ```bash
-python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama70b
+python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama
 ```
+**Tip**: Use `--llm llama` for fast responses (8B model), `--llm llama70b` for better quality
 
 ### Madagascar Quiz Mode
 ```bash
-# With RAG (uses subtitles)
+# With RAG (uses subtitles - RECOMMENDED for accuracy)
 python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 10 --topic "the Madagascar movie"
 
-# Without RAG (basic facts)
+# Without RAG (uses LLM knowledge only)
 python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama --topic "the Madagascar movie"
 ```
 
 ### Custom Topic Quiz (e.g., Space Science)
 ```bash
-# Galaxy science quiz with PDF textbook
+# With RAG (knowledge file can be .srt, .pdf, or .txt)
 python3 voice_chat_riva_aws.py --subtitle ../data/Galaxy_Science.pdf --rag --mode madagascar_quiz --llm llama70b --topic "space and galaxies" --quiz_len 10
 
-# Toy Story quiz with subtitles
-python3 voice_chat_riva_aws.py --subtitle ../data/Toy_Story.srt --rag --mode madagascar_quiz --llm llama70b --topic "Toy Story movie" --quiz_len 10
-
-# Dinosaur quiz with text file
-python3 voice_chat_riva_aws.py --subtitle ../data/dinosaurs.txt --rag --mode madagascar_quiz --llm llama70b --topic "dinosaurs" --quiz_len 10
+# Without specifying file (auto-uses Madagascar.srt)
+python3 voice_chat_riva_aws.py --rag --mode madagascar_quiz --llm llama70b --topic "any movie or topic" --quiz_len 10
 ```
 
 ### Custom Announcements
 ```bash
 # Run from repository root
-cd /mnt/nvme/adrian/ChatBotRobot
-./scripts/speak.py "Bravo Adrian for tidying up your toys!"
+cd /home/reza/ChatBotRobot
+python3 scripts/speak.py "Bravo Adrian for tidying up your toys!"
 ```
 
 ### All CLI Options
 ```bash
---duration 10              # Max recording time (seconds)
---mode chat               # Mode: chat or madagascar_quiz
---llm llama70b            # LLM: llama (8B), llama70b (70B), claude
---rag                     # Enable RAG with subtitle context
+--duration 10              # Max recording time in seconds
+--mode chat               # Mode: 'chat' or 'madagascar_quiz'
+--llm llama               # LLM: 'llama' (8B-fast), 'llama70b' (70B-best), 'claude'
+--rag                     # Enable RAG with subtitle context (recommended for quiz)
 --quiz_len 10             # Number of quiz questions
---kid_name Adrian         # Child's name
---topic "Madagascar movie" # Quiz topic (any subject!)
---no-vad                  # Disable voice activity detection
---subtitle <path>         # Knowledge file (.srt, .pdf, .txt)
+--kid_name Adrian         # Child's name for personalization
+--topic "Madagascar movie" # Quiz topic (movie title or subject)
+--no-vad                  # Disable voice activity detection (always record full duration)
+--subtitle <path>         # Knowledge file (.srt, .pdf, .txt) - defaults to Madagascar.srt
+--output-device 25        # Audio output device index (run: python3 list_audio_devices.py)
 ```
 
 ## 📁 Project Structure
@@ -206,12 +346,49 @@ ChatBotRobot/
 ## 🛠️ Troubleshooting
 
 ### Riva Container Won't Start
+
 ```bash
 # Check GPU and memory usage on Jetson
 sudo tegrastats
-# Verify Docker can access GPU
-docker run --rm --runtime nvidia nvidia/cuda:11.4.0-base-ubuntu20.04 tegrastats --interval 1000 --logfile /dev/stdout
+
+# Verify Jetson is in MAXN mode (required for Riva)
+nvpmodel -q  # Should show "mode: 0"
+# If not: sudo nvpmodel -m 0 && sudo jetson_clocks
+
+# Check Docker can access GPU
+docker run --rm --gpus all nvidia/cuda:11.4.0-base-ubuntu20.04 tegrastats --interval 1000 --logfile /dev/stdout
+
+# View Riva container logs for errors
+docker logs riva-speech 2>&1 | tail -50
+
+# Check if port is already in use
+sudo lsof -i :50051  # gRPC port
+sudo lsof -i :50000  # HTTP port
+
+# Force stop and remove existing container
+docker rm -f riva-speech
 ```
+
+### Docker & GPU Configuration Status
+
+**Current Setup (Verified Working):**
+```
+✓ Docker Version: 26.1.3 with NVIDIA runtime enabled
+✓ Architecture: aarch64 (ARM64) - Correct for Jetson Xavier
+✓ NVIDIA Runtime: Configured as default in /etc/docker/daemon.json
+✓ Docker Data Storage: /mnt/nvme/docker (NVMe drive)
+✓ Riva Version: 2.14.0-l4t-aarch64 (Latest for JetPack R35)
+✓ NVIDIA Runtime Configuration:
+    - Default runtime: nvidia
+    - Runtime path: nvidia-container-runtime
+✓ Model Status: TensorRT + ONNX Runtime models fully loaded
+✓ GPU Models Loaded:
+    - Conformer ASR (Speech-to-Text)
+    - FastPitch + HiFiGAN TTS (Text-to-Speech)
+    - All running on GPU device 0 (Unified Memory)
+```
+
+### Riva Service Status Verification
 
 ### Audio Issues
 ```bash

@@ -75,6 +75,12 @@ sudo jtop
 
 ### 3. Set Up Storage
 
+**Your Current Setup:**
+- ✅ NVMe SSD already mounted at `/mnt/nvme` with 137GB free
+- ✅ Internal storage at `/` with 2.9GB free
+
+For future reference, standard setup:
+
 ```bash
 # Check NVMe SSD
 lsblk
@@ -91,11 +97,6 @@ sudo mount /dev/nvme0n1 /mnt/nvme
 
 # Auto-mount on boot
 echo '/dev/nvme0n1 /mnt/nvme ext4 defaults 0 2' | sudo tee -a /etc/fstab
-
-# Create user directory
-sudo mkdir -p /mnt/nvme/adrian
-sudo chown -R $USER:$USER /mnt/nvme/adrian
-cd /mnt/nvme/adrian
 ```
 
 ---
@@ -233,6 +234,19 @@ docker run hello-world
 
 ### 2. Configure NVIDIA Container Runtime
 
+**Status: ALREADY CONFIGURED ✓**
+
+Your system already has:
+```bash
+✓ Docker 26.1.3 with NVIDIA runtime enabled
+✓ GPU support configured in /etc/docker/daemon.json
+✓ NVIDIA Container Runtime ready
+
+# Verify:
+docker run --rm --gpus all nvidia/cuda:11.4.0-base-ubuntu20.04 nvidia-smi
+```
+
+For fresh installation:
 ```bash
 # Should already be installed with JetPack
 # Verify
@@ -264,8 +278,20 @@ source chatbot-env/bin/activate
 
 ## Clone Repository
 
+**Your Current Setup:**
 ```bash
-cd /mnt/nvme/adrian
+✓ Repository already cloned at: /home/reza/ChatBotRobot
+✓ All files present and ready
+✓ Ready to run applications
+
+# To verify:
+ls -la /home/reza/ChatBotRobot/
+# Should show: README.md, requirements.txt, src/, docs/, scripts/, data/
+```
+
+For fresh installation:
+```bash
+cd ~
 
 # Clone the repository
 git clone https://github.com/rezashojaghiass/ChatBotRobot.git
@@ -280,8 +306,16 @@ ls -la
 
 ## Install Python Dependencies
 
+**Your Current Setup:**
 ```bash
-cd /mnt/nvme/adrian/ChatBotRobot
+✓ All required packages should be installed already
+# Verify:
+python3 -c "import boto3; import riva.client; import sentence_transformers; print('✓ All packages ready')"
+```
+
+To install or reinstall:
+```bash
+cd /home/reza/ChatBotRobot
 
 # Install all dependencies
 pip3 install -r requirements.txt
@@ -310,7 +344,7 @@ python3 -c "from sentence_transformers import SentenceTransformer; SentenceTrans
 ### 1. List Audio Devices
 
 ```bash
-cd src
+cd /home/reza/ChatBotRobot/src
 
 # Check ALSA devices
 arecord -l
@@ -319,7 +353,7 @@ arecord -l
 aplay -l
 # Look for your speaker
 
-# Check with Python
+# Check with Python (detailed info)
 python3 list_audio_devices.py
 ```
 
@@ -339,7 +373,7 @@ rm test.wav
 ### 3. Configure Default Device (Optional)
 
 ```bash
-# Create ALSA config
+# Create ALSA config to set permanent defaults
 cat > ~/.asoundrc << 'EOF'
 pcm.!default {
     type hw

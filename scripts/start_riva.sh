@@ -1,8 +1,8 @@
 #!/bin/bash
 # Start NVIDIA Riva speech server
-# Assumes Riva QuickStart is installed in /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
+# Assumes Riva QuickStart is installed in /home/reza/riva_quickstart_arm64_v2.14.0
 
-RIVA_DIR="/mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0"
+RIVA_DIR="/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0"
 
 if [ ! -d "$RIVA_DIR" ]; then
     echo "Error: Riva directory not found at $RIVA_DIR"
@@ -13,7 +13,8 @@ fi
 cd "$RIVA_DIR"
 
 echo "Starting Riva speech server..."
-bash riva_start.sh
+# Use the official start script which includes proper Jetson GPU configuration
+bash start_riva_v2_14.sh
 
 # Wait for server to be ready
 echo "Waiting for Riva server to initialize..."

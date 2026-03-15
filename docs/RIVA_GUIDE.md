@@ -40,9 +40,22 @@ Before starting, ensure:
 
 ## Download Riva QuickStart
 
-### 1. Get NGC API Key
+### Status: ALREADY INSTALLED ✓
+
+**Current Setup:**
+- ✅ Riva 2.14.0 installed at: `/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0`
+- ✅ Docker runtime configured with GPU support
+- ✅ Models downloaded and ready
+- ✅ Container fully tested and working
+
+**To skip this section and jump to:** [Start Riva Server](#start-riva-server)
+
+---
+
+### 1. Get NGC API Key (For Fresh Installation Only)
 
 ```bash
+# Only needed if re-downloading Riva from scratch
 # Go to https://ngc.nvidia.com/setup/api-key
 # Generate API Key
 # Copy the key (starts with "nvapi-...")

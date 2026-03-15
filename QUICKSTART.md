@@ -8,21 +8,24 @@ Get your ChatBot Robot running in 5 minutes!
 
 ```bash
 # 1. Go to your repository
-cd /mnt/nvme/adrian/ChatBotRobot
+cd /home/reza/ChatBotRobot
 
 # 2. Check if Riva is running
 docker ps | grep riva-speech
 
-# 3. If not running, start it:
-./scripts/start_riva.sh
+# 3. If not running, start it from Riva directory:
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
+bash start_riva_v2_14.sh
+# Wait for: "✓ Riva server is running"
 
 # 4. Run the voice chat
-cd src
-# Note: output device index can change. On this setup, KT USB Audio is device 25.
-python3 voice_chat_riva_aws.py --mode chat --llm llama70b --output-device 25
+cd /home/reza/ChatBotRobot/src
+python3 voice_chat_riva_aws.py --mode chat --llm llama
 
 # That's it! 🚀
 ```
+
+**Note**: Riva models are in `/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0`, not `/mnt/nvme/adrian/`
 
 ---
 
@@ -36,8 +39,15 @@ python3 voice_chat_riva_aws.py --mode chat --llm llama70b --output-device 25
 
 ## Step 1: Clone Repository
 
+**Status**: Repository already cloned at `/home/reza/ChatBotRobot` ✓
+
 ```bash
-cd /mnt/nvme/adrian
+cd /home/reza/ChatBotRobot
+```
+
+For fresh installation:
+```bash
+cd ~
 git clone https://github.com/rezashojaghiass/ChatBotRobot.git
 cd ChatBotRobot
 ```
@@ -57,16 +67,18 @@ pip3 install -r requirements.txt
 
 ## Step 3: Set Up Riva
 
+**Status**: Riva 2.14.0 already installed at `/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0` ✓
+
 ```bash
-# Download and install Riva (one-time setup)
-# Follow: docs/RIVA_GUIDE.md
+# Start Riva with GPU enabled
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
+bash start_riva_v2_14.sh
 
-# Or use existing installation:
-cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
-bash riva_start.sh
-
-# Wait for "Server ready on port 50051"
+# Wait for output showing Docker container is running
+# "✓ Riva server is running with GPU"
 ```
+
+For detailed setup, see: [docs/RIVA_GUIDE.md](docs/RIVA_GUIDE.md)
 
 ## Step 4: Configure AWS
 
@@ -87,7 +99,7 @@ aws configure
 ## Step 5: Test Audio
 
 ```bash
-cd src
+cd /home/reza/ChatBotRobot/src
 
 # List audio devices
 python3 list_audio_devices.py
@@ -109,10 +121,13 @@ cd ../scripts
 
 ```bash
 # Always work from the repository directory
-cd /mnt/nvme/adrian/ChatBotRobot/src
+cd /home/reza/ChatBotRobot/src
 
-# Basic chat with Buzz Lightyear
-python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama --output-device 25
+# Basic chat with Buzz Lightyear (fast, Llama 8B)
+python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama
+
+# Or use Llama 70B for better quality (slower)
+python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama70b
 
 # Conversation flow:
 # 1. Speak: "Hello Buzz!"
@@ -126,7 +141,7 @@ python3 voice_chat_riva_aws.py --duration 10 --mode chat --llm llama --output-de
 ## Step 7: Run Quiz Mode (Optional)
 
 ```bash
-# Still in /mnt/nvme/adrian/ChatBotRobot/src
+# Still in /home/reza/ChatBotRobot/src
 
 # Download Madagascar subtitles (see data/README.md)
 # Save to: ../data/Madagascar.srt
@@ -204,7 +219,7 @@ python3 voice_chat_riva_aws.py --subtitle /path/to/subtitles.srt --rag
 
 ```bash
 # Always start from the repo
-cd /mnt/nvme/adrian/ChatBotRobot
+cd /home/reza/ChatBotRobot
 
 # Speak a message
 ./scripts/speak.py "Bravo Adrian!"
