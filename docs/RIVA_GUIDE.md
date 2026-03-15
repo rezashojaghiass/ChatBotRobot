@@ -23,7 +23,7 @@ Complete guide to install and configure NVIDIA Riva speech AI services on Jetson
 
 **For Jetson Xavier:**
 - **Maximum Riva Version**: 2.14.0 (due to JetPack 5.x / L4T R35.x)
-- **Client SDK**: Can use 2.19.x (backward compatible)
+- **Client SDK**: Using 2.14.0 (matches server version)
 - **Container**: `nvcr.io/nvidia/riva/riva-speech:2.14.0-l4t-aarch64`
 
 ---
@@ -69,20 +69,20 @@ docker login nvcr.io
 ### 2. Download Riva QuickStart Scripts
 
 ```bash
-cd /mnt/nvme/adrian
+cd /mnt/nvme/reza_backup
 
 # Download Riva QuickStart for ARM64
-ngc registry resource download-version "nvidia/riva/riva_quickstart_arm64:2.19.0"
+ngc registry resource download-version "nvidia/riva/riva_quickstart_arm64:2.14.0"
 
 # Or use wget
-wget https://ngc.nvidia.com/api/registry/model-scripts/nvidia/riva/riva_quickstart_arm64/versions/2.19.0/files/riva_quickstart_arm64_v2.19.0.tar.gz
+wget https://ngc.nvidia.com/api/registry/model-scripts/nvidia/riva/riva_quickstart_arm64/versions/2.14.0/files/riva_quickstart_arm64_v2.14.0.tar.gz
 
 # Extract
-tar -xzf riva_quickstart_arm64_v2.19.0.tar.gz
-cd riva_quickstart_arm64_v2.19.0
+tar -xzf riva_quickstart_arm64_v2.14.0.tar.gz
+cd riva_quickstart_arm64_v2.14.0
 ```
 
-**Note:** QuickStart version 2.19.0 is just the script package - it will download Riva server 2.14.0 for Xavier.
+**Note:** QuickStart version 2.14.0 includes Riva server 2.14.0 for Xavier.
 
 ---
 
@@ -91,7 +91,7 @@ cd riva_quickstart_arm64_v2.19.0
 ### 1. Edit Configuration File
 
 ```bash
-cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
 
 # Edit config.sh
 nano config.sh
@@ -154,7 +154,7 @@ models_tts=(
 ### 1. Initialize Models
 
 ```bash
-cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
 
 # Run initialization script
 bash riva_init.sh
@@ -206,7 +206,7 @@ Model built: models/triton/tts_model/...
 ### 1. Start Server Container
 
 ```bash
-cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
 
 # Start Riva server
 bash riva_start.sh
@@ -254,14 +254,14 @@ cd /mnt/nvme/adrian/ChatBotRobot/scripts
 # Create start script
 cat > start_riva.sh << 'EOF'
 #!/bin/bash
-cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
 bash riva_start.sh
 EOF
 
 # Create stop script
 cat > stop_riva.sh << 'EOF'
 #!/bin/bash
-cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
 docker stop riva-speech
 EOF
 
@@ -401,7 +401,7 @@ sudo ufw status
 sudo ufw allow 50051/tcp
 
 # 4. Restart server
-cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
+cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
 bash riva_stop.sh
 bash riva_start.sh
 ```
@@ -507,8 +507,8 @@ Requires=docker.service
 [Service]
 Type=simple
 User=nvidia
-WorkingDirectory=/mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0
-ExecStart=/bin/bash /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0/riva_start.sh
+WorkingDirectory=/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0
+ExecStart=/bin/bash /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0/riva_start.sh
 ExecStop=/usr/bin/docker stop riva-speech
 Restart=always
 

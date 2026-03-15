@@ -42,7 +42,7 @@ An interactive, real-time voice-controlled AI system featuring quiz mode and con
 
 ### Python Libraries
 ```bash
-nvidia-riva-client==2.19.1
+nvidia-riva-client==2.14.0
 boto3==1.37.38
 pyaudio
 sentence-transformers

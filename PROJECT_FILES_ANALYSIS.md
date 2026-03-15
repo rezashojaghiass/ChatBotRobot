@@ -13,7 +13,7 @@
 - **Status**: UPDATED with correct paths and status notes
 - **Changes**: 
   - Updated all paths from `/mnt/nvme/adrian/ChatBotRobot` to `/home/reza/ChatBotRobot`
-  - Updated Riva path from `/mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0` to `/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0`
+  - Updated Riva path from `/mnt/nvme/adrian/riva_quickstart_arm64_v2.14.0` to `/mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0`
   - Updated startup script from `./scripts/start_riva.sh` to explicit Riva directory path
   - Added status indicators showing what's already installed
   - Improved LLM selection guidance (llama vs llama70b)
@@ -24,7 +24,7 @@
 - **Status**: VERIFIED - All packages are correct and installed
 - **Key Packages**:
   - `boto3==1.37.38` (AWS SDK)
-  - `nvidia-riva-client==2.19.1` (Speech AI)
+  - `nvidia-riva-client==2.14.0` (Speech AI)
   - `sentence-transformers` (RAG embeddings)
   - `pyaudio` (Audio I/O)
   - `torch>=1.9.0` (Deep learning)

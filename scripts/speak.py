@@ -46,7 +46,7 @@ def speak(text, voice="English-US.Male-1", sample_rate=48000):
     except Exception as e:
         print(f"Error: {e}")
         print("\nMake sure Riva server is running:")
-        print("  cd /mnt/nvme/adrian/riva_quickstart_arm64_v2.19.0")
+        print("  cd /mnt/nvme/reza_backup/riva_quickstart_arm64_v2.14.0")
         print("  bash riva_start.sh")
         return 1
     
