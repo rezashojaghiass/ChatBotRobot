@@ -738,6 +738,11 @@ def main():
 def run_chat_mode(args):
     """Original chat mode"""
     try:
+        # Greeting
+        greeting = f"Hello! I'm your AI assistant. How can I help you today?"
+        print(f"🤖 Assistant: {greeting}")
+        speak_riva(greeting, server=args.server, output_device_index=args.output_device)
+        
         while True:
             # Record (VAD enabled by default)
             if not args.no_vad:
