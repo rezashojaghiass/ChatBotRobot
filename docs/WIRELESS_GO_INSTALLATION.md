@@ -1,82 +1,90 @@
-# RODE Wireless GO Installation Guide
+# RODE Wireless GO II Installation Guide
 
 ## Overview
-This guide covers installing and configuring the RODE Wireless GO microphone on your NVIDIA Jetson Xavier.
+This guide covers installing and configuring the RODE Wireless GO II (dual wireless microphone system) on your NVIDIA Jetson Xavier for audio recording and playback.
 
 ## Problem & Solution
 
 ### The Problem
-When the RODE Wireless GO was first connected to your Xavier, it appeared in the system's USB device list (`lsusb`) but **was not recognized by the audio system**. The device couldn't be found by:
-- PyAudio library
-- ALSA tools (`arecord`)
-- Audio applications
+The RODE Wireless GO II receiver hub appeared in the system's USB device list (`lsusb`) but **was NOT showing as an audio input device** in ALSA or PyAudio, even though the hardware was connected and the USB audio driver was loaded.
 
-Even though the USB hardware was physically connected and detected, the operating system couldn't use it for audio because the necessary driver was missing.
+This was caused by **the receiver hub being powered off**. The device firmware only exposes audio input/output endpoints when the hardware is actively powered on.
 
 ### Root Cause
-The **USB audio kernel module** (`snd_usb_audio`) was not loaded. This kernel module is responsible for:
-- Detecting USB audio devices
-- Registering them with ALSA (Advanced Linux Sound Architecture)
-- Making them available to applications
+The RODE Wireless GO II receiver hub has these requirements:
+1. **Must be powered on** via USB or its battery
+2. **Wireless microphones must be synced/paired** to the receiver
+3. **USB audio driver** (`snd_usb_audio`) must be loaded on Xavier
 
-Without this module, the kernel doesn't know how to communicate with USB microphones and headsets, regardless of whether they're physically connected.
+When powered off, the device appears in `lsusb` but doesn't expose any audio endpoints to ALSA.
 
 ### The Solution
-1. **Load the USB audio driver**: `sudo modprobe snd_usb_audio`
-   - This loads the `snd_usb_audio` kernel module into memory
-   - RODE device immediately appears as Card 0 in ALSA
-   
-2. **Make it persistent**: Add the module to `/etc/modules`
-   - Ensures the driver loads automatically on every system boot
-   - No manual intervention needed after restart
+1. **Ensure receiver is powered ON** - Check for LED indicators on the hub
+2. **Verify wireless mics are paired** - They should auto-pair on startup
+3. **Load USB audio driver** (if not already loaded): `sudo modprobe snd_usb_audio`
+4. **Check device detection**: `python3 src/list_audio_devices.py` should show:
+   ```
+   Device 25: Wireless GO II RX: USB Audio (hw:3,0)
+     Channels: 2
+     Sample Rate: 48000.0
+   ```
 
 ### Result
-After loading the driver, your RODE Wireless GO:
-- ✅ Appears in ALSA as "USB-Audio - KT USB Audio" (Card 0)
-- ✅ Becomes available to PyAudio and other audio libraries
-- ✅ Can be used with voice chat applications and audio capture tools
+Once powered on and paired, your RODE Wireless GO II:
+- ✅ Appears in ALSA as **"Wireless GO II RX: USB Audio"** (Device 25)
+- ✅ Shows 2 input channels at 48000 Hz sample rate
+- ✅ Can record audio from the wireless microphones
+- ✅ Can be used with PyAudio and audio applications for voice recording
 
 ## Prerequisites
-- RODE Wireless GO microphone
-- USB adapter/connection to Jetson Xavier
-- USB audio driver support
+- RODE Wireless GO II receiver hub + 2 wireless transmitter microphones
+- USB connection to Jetson Xavier (via USB-A or USB-C adapter)
+- Power source for receiver (USB power or internal battery charged)
+- USB audio driver support (`snd_usb_audio`)
 
 ## Installation Steps
 
+### CRITICAL: Power On the Receiver
+⚠️ **The receiver hub MUST be powered on for audio input to work!**
+
+Check for LED indicators on the physical receiver hub. The device should show power lights when active. If powered off, audio input will NOT be detected by the operating system.
+
 ### 1. Verify USB Connection
-First, confirm your RODE Wireless GO is connected via USB:
+Confirm your RODE Wireless GO II receiver is connected via USB:
 
 ```bash
 lsusb | grep -i rode
 ```
 
-Expected output:
+Expected outputs:
 ```
-Bus 001 Device 004: ID 19f7:002a RODE Microphones
+Bus 001 Device 004: ID 19f7:002a RODE Microphones         (Transmitter)
+Bus 001 Device 007: ID 31b2:1002 KTMicro KT USB Audio      (Receiver Hub)
 ```
 
 ### 2. Load USB Audio Driver
-Load the USB audio kernel module to enable audio device support:
+Load the USB audio kernel module:
 
 ```bash
 sudo modprobe snd_usb_audio
 ```
 
-### 3. Verify Audio Device Recognition
-Check if the device is recognized by ALSA (Advanced Linux Sound Architecture):
+### 3. Verify Receiver Is Detected
+Check if the receiver appears as an input device:
 
 ```bash
-cat /proc/asound/cards
+python3 src/list_audio_devices.py
 ```
 
-Expected output should include:
+Should show:
 ```
-0 [Audio          ]: USB-Audio - KT USB Audio
-                    KTMicro KT USB Audio at usb-3610000.xhci-2.3, full speed
+Device 25: Wireless GO II RX: USB Audio (hw:3,0)
+  Channels: 2
+  Sample Rate: 48000.0
 ```
 
-### 4. Make Installation Persistent
-To ensure the USB audio driver loads automatically on system startup:
+### 4. Make Driver Persistent
+To ensure the USB audio driver loads automatically on boot:
 
 ```bash
 echo "snd_usb_audio" | sudo tee -a /etc/modules
@@ -87,84 +95,103 @@ This adds the module to the system's persistent module list.
 ## Verification
 
 ### Check Audio Input Devices
-Run the audio device detection script:
+Run the audio device detection script to verify the RODE receiver is recognized:
 
 ```bash
 cd /home/reza/ChatBotRobot
 python3 src/list_audio_devices.py
 ```
 
+Look for: `Device 25: Wireless GO II RX: USB Audio (hw:3,0)`
+
 ### Check with ALSA
-Use ALSA utilities to list capture devices:
+View all capture devices:
 
 ```bash
 arecord -l
 ```
 
-### Check System Audio Cards
-View all registered audio cards:
+The RODE receiver should NOT appear in arecord (as it doesn't have traditional ALSA capture), but PyAudio should detect it.
+
+### Record Audio from RODE
+Record 5 seconds from the wireless microphones:
 
 ```bash
-cat /proc/asound/cards
+cd /home/reza/ChatBotRobot
+python3 src/record_audio.py "test.wav" 5 25
 ```
 
-## Troubleshooting
-
-### Device Not Appearing
-If your RODE Wireless GO doesn't appear in the audio device list:
-
-1. **Verify USB connection**: Use `lsusb` to confirm the device is connected
-2. **Reload the driver**:
-   ```bash
-   sudo modprobe -r snd_usb_audio
-   sudo modprobe snd_usb_audio
-   ```
-3. **Check device info**:
-   ```bash
-   ls -la /proc/asound/card0/
-   ```
-
-### Permission Issues
-If you get permission errors, ensure you have sudo access or add your user to the audio group:
+### Play Back Recording
+Play the recording through your speaker (device 25 = speaker output):
 
 ```bash
-sudo usermod -a -G audio $USER
+python3 src/play_audio.py "test.wav"
 ```
-
-Then log out and back in for changes to take effect.
 
 ## Usage
 
-Once installed, your RODE Wireless GO will be available as a USB audio device and can be used with:
+### Recording from RODE Wireless Microphones
+```bash
+python3 src/record_audio.py "recording.wav" 10 25
+```
+- Records 10 seconds
+- Device 25 = Wireless GO II receiver
+- Output: stereo WAV file
 
-- **Python applications** using PyAudio or similar libraries
-- **ALSA tools** for direct audio capture
-- **PulseAudio/JACK** for advanced audio routing
-- **Voice chat applications** in your ChatBotRobot project
+### Playing Audio
+```bash
+python3 src/play_audio.py "recording.wav"
+```
+- Uses default speaker (device 25)
+- Supports automatic sample rate conversion
+
+## Troubleshooting
+
+### "Device Not Appearing in Audio List"
+**Solution**: Ensure the receiver hub is POWERED ON!
+
+1. Check for LED lights on the physical receiver
+2. Verify power via USB cable or charged battery
+3. Restart the Xavier after powering on receiver
+4. Run `python3 src/list_audio_devices.py` again
+
+### USB Module Not Loading
+If `sudo modprobe snd_usb_audio` fails:
+
+```bash
+# Check if module is already loaded
+lsmod | grep snd_usb
+
+# If builtin (Jetson Xavier), it should be automatic
+```
+
+### Microphones Not Transmitting
+If receiver is on but no audio is recorded:
+
+1. **Check wireless mics have power** - Look for LED indicators on transmitters
+2. **Check pairing** - Mics may need to be re-paired with receiver
+3. **Move mics closer** - Try moving within 5-10 feet of receiver to test
+4. **Restart transmitters** - Toggle power off/on on the wireless mics
+
+### Permission Issues
+Add your user to the audio group:
+
+```bash
+sudo usermod -a -G audio $USER
+# Log out and back in for changes to take effect
+```
 
 ## Device Information
 
 | Property | Value |
 |----------|-------|
-| Vendor ID | 19f7 |
-| Product ID | 002a |
-| Device Name | RODE Microphones |
-| Protocol | USB 2.0 |
-| Interface | Audio Class |
-
-## Additional Resources
-
-- [RODE Wireless GO Official Site](https://www.rode.com/en/microphones/wireless/wireless-go)
-- [ALSA Project](https://www.alsa-project.org/)
-- [Jetson Audio Configuration](https://docs.nvidia.com/jetson/l4t/index.html)
-
-## Notes
-
-- The RODE Wireless GO may appear as a generic USB audio device initially
-- The device registers in ALSA as Card 0 after driver installation
-- USB audio priority depends on device order - may change if other USB audio devices are connected
-- For best audio quality, ensure your Xavier has stable power supply during audio capture
-
----
-
-Last Updated: March 15, 2026
+| Device Model | RODE Wireless GO II |
+| Receiver Vendor ID | 31b2 |
+| Receiver Product ID | 1002 |
+| Receiver USB Name | KTMicro KT USB Audio |
+| Input Channels | 2 (stereo) |
+| Sample Rate | 48000 Hz |
+| PyAudio Device Index | 25 |
+| Transmitter Vendor ID | 19f7 |
+| Transmitter Product ID | 002a |
+| Range | 200m line of sight |
