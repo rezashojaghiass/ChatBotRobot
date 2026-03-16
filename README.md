@@ -174,11 +174,51 @@ EOF
 
 #### Step 3: Run Madagascar Quiz
 
+**Option A: Using the Bash Script (Recommended - Auto-detects speaker)**
+
+```bash
+# Navigate to ChatBotRobot directory
+cd /home/reza/ChatBotRobot
+
+# Run with default settings (Adrian, Llama 70B, 5 questions, RAG enabled)
+bash scripts/madagascar_quiz.sh
+
+# Run with custom settings
+bash scripts/madagascar_quiz.sh --quiz-len 3 --llm llama70b --duration 10 --topic "space and galaxies"
+
+# View all available options
+bash scripts/madagascar_quiz.sh --help
+```
+
+**Script Benefits**:
+- ✓ Automatically detects KT USB Audio speaker by name (survives USB replug)
+- ✓ Auto-stops recording when user finishes speaking (VAD enabled)
+- ✓ RAG-enhanced context from Madagascar movie subtitles
+- ✓ Simplified command-line interface with sensible defaults
+
+**Script Options**:
+```
+--quiz-len <N>          Number of questions (default: 5)
+--llm <model>           LLM: 'llama' (8B), 'llama70b' (70B), 'claude' (default: llama70b)
+--duration <secs>       Max recording time (default: 10)
+--topic <topic>         Quiz topic (default: "the Madagascar movie")
+--no-rag                Disable RAG (uses basic facts instead of subtitles)
+--no-vad                Disable voice activity detection (record full duration)
+--output-device <N>     Force specific audio device (rarely needed)
+--help                  Show this help message
+```
+
+**Option B: Using Python Directly (Advanced)**
+
 ```bash
 # Navigate to source code directory
 cd /home/reza/ChatBotRobot/src
-# Note: output device index can change. On this setup, KT USB Audio is device 25.
-python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6 --topic "the Madagascar movie" --output-device 25
+
+# Run with auto-detection (recommended)
+python3 voice_chat_riva_aws.py --duration 10 --mode madagascar_quiz --llm llama70b --rag --quiz_len 6 --topic "the Madagascar movie"
+
+# Note: Output device is automatically detected. No need to specify --output-device
+# The system finds "KT USB Audio" by name, ensuring it works even after USB replug
 ```
 
 #### Step 4: Stop Riva (When Done)
@@ -411,6 +451,43 @@ arecord -l
 See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for more solutions.
 
 ## 🎓 Technical Details
+
+### Audio Device Detection & Playback Fixes
+
+**Problem: Hardcoded USB Device Indices**
+- USB audio devices (microphones, speakers) get assigned different device indices when unplugged/replugged
+- Previous code used hardcoded indices, causing failures after USB reconnection
+- Example: Speaker was at device 25, but code looked for device 0
+
+**Solution: Name-Based Device Detection**
+```python
+# Instead of: output_device_index = 0  ❌ Fails after USB replug
+# We now: find_output_device_by_name("KT USB Audio")  ✅ Always works
+```
+- Searches for devices by name substring match (case-insensitive)
+- Returns device index at runtime
+- Survives USB unplugs and replugs
+- Implemented in both `voice_chat_riva_aws.py` and `riva_speech.py`
+
+**Problem: Audio Playback at 2-3x Speed**
+- Riva synthesizes mono audio (1 channel)
+- Code was opening stereo stream (2 channels) and writing mono data to it
+- PyAudio interpreted mono data as half the duration → 2x speed playback
+
+**Solution: Use Mono for Playback**
+```python
+# Before: channels=2  ❌ Plays at 2x speed
+# After:  channels=1  ✅ Normal speed
+```
+- Changed all TTS playback to mono (1 channel)
+- Matches Riva's output format exactly
+- No data loss or quality reduction
+
+**Tested & Verified**
+- ✅ Device detection survives USB replug
+- ✅ Audio plays at normal speed (not 2-3x fast)
+- ✅ Works with auto-detected device indices
+- ✅ Both ChatBotRobot and Humanoid apps fixed
 
 ### Architecture
 ```

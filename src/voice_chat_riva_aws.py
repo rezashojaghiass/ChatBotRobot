@@ -39,6 +39,20 @@ RAG_CHUNKS = []
 RAG_EMBEDDINGS = None
 RAG_MODEL = None
 
+def find_output_device_by_name(device_name_pattern):
+    """Find PyAudio output device by name pattern"""
+    try:
+        p = pyaudio.PyAudio()
+        for i in range(p.get_device_count()):
+            info = p.get_device_info_by_index(i)
+            if device_name_pattern.lower() in info['name'].lower() and info['maxOutputChannels'] > 0:
+                p.terminate()
+                return i
+        p.terminate()
+    except Exception as e:
+        print(f"Error finding device: {e}")
+    return None
+
 def load_srt_file(filepath):
     """Load and parse SRT subtitle file"""
     try:
@@ -651,8 +665,19 @@ Grade the answer."""
         print(f"Raw response: {raw_response[:200]}")
         return None
 
-def speak_riva(text, server="localhost:50051", rate=48000, output_device_index=0):
+def speak_riva(text, server="localhost:50051", rate=48000, output_device_index=None):
     """Synthesize and play speech using Riva TTS"""
+    # ALWAYS try to auto-detect KT USB Audio speaker first (ignores passed device index)
+    # This ensures we use the correct device even if USB devices are unplugged/replugged
+    detected_device = find_output_device_by_name("KT USB Audio")
+    if detected_device is not None:
+        print(f"✓ Auto-detected KT USB Audio speaker at device {detected_device}")
+        output_device_index = detected_device
+    else:
+        print("⚠️ KT USB Audio speaker not found, falling back to passed device index")
+        if output_device_index is None:
+            print("⚠️ No device specified, using default device (may fail)")
+    
     print("🔊 Speaking...")
     
     auth = riva.client.Auth(uri=server)
@@ -668,11 +693,12 @@ def speak_riva(text, server="localhost:50051", rate=48000, output_device_index=0
     
     audio_data = resp.audio
     
-    # Play audio via explicit output device (USB speaker is usually index 1).
+    # Play audio via explicit output device
+    # Note: Riva synthesizes MONO audio, so always use 1 channel
     p = pyaudio.PyAudio()
     stream = p.open(
         format=pyaudio.paInt16,
-        channels=1,
+        channels=1,  # Riva outputs mono, not stereo
         rate=rate,
         output=True,
         output_device_index=output_device_index,
@@ -695,10 +721,10 @@ def main():
     parser.add_argument("--duration", type=int, default=5, help="Recording duration in seconds")
     parser.add_argument("--no-vad", action="store_true", help="Disable voice activity detection (use fixed duration)")
     parser.add_argument("--device", type=int, default=None, help="Audio input device index")
-    parser.add_argument("--output-device", type=int, default=0, help="Audio output device index (KT USB Audio speaker is device 0)")
+    parser.add_argument("--output-device", type=int, default=None, help="Audio output device index (auto-detects KT USB Audio by default; rarely needed)")
     parser.add_argument("--mode", default="chat", choices=["chat", "madagascar_quiz"],
                         help="Mode: chat or madagascar_quiz")
-    parser.add_argument("--kid_name", default="Reza", help="User's name")
+    parser.add_argument("--kid_name", default="Adrian", help="User's name")
     parser.add_argument("--quiz_len", type=int, default=10, help="Number of quiz questions")
     parser.add_argument("--rag", action="store_true", help="Enable RAG with subtitle file")
     parser.add_argument("--subtitle", default="/mnt/nvme/adrian/riva/Madagascar.720p.CHD.en.srt",

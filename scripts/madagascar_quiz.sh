@@ -18,7 +18,7 @@ LLM="llama70b"
 DURATION=10
 TOPIC="the Madagascar movie"
 RAG_ENABLED=true
-OUTPUT_DEVICE=0
+OUTPUT_DEVICE=""
 NO_VAD=""
 
 # Script directory
@@ -146,7 +146,9 @@ CMD="$CMD --mode madagascar_quiz"
 CMD="$CMD --llm $LLM"
 CMD="$CMD --quiz_len $QUIZ_LENGTH"
 CMD="$CMD --topic \"$TOPIC\""
-CMD="$CMD --output-device $OUTPUT_DEVICE"
+if [ -n "$OUTPUT_DEVICE" ]; then
+    CMD="$CMD --output-device $OUTPUT_DEVICE"
+fi
 
 if [ "$RAG_ENABLED" = true ]; then
     CMD="$CMD --rag"

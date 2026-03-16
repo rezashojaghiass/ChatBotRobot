@@ -35,7 +35,7 @@ NC='\033[0m' # No Color
 # These variables store the user-provided options or defaults
 DURATION=10
 LLM="llama70b"
-OUTPUT_DEVICE=0
+OUTPUT_DEVICE=""
 NO_VAD=""
 
 # Script directory - get absolute path to ChatBotRobot root
@@ -165,7 +165,9 @@ CMD="python3 $SCRIPT_DIR/src/voice_chat_riva_aws.py"
 CMD="$CMD --duration $DURATION"
 CMD="$CMD --mode chat"
 CMD="$CMD --llm $LLM"
-CMD="$CMD --output-device $OUTPUT_DEVICE"
+if [ -n "$OUTPUT_DEVICE" ]; then
+    CMD="$CMD --output-device $OUTPUT_DEVICE"
+fi
 
 if [ -n "$NO_VAD" ]; then
     CMD="$CMD $NO_VAD"
