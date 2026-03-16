@@ -229,21 +229,11 @@ def record_audio(duration=5, rate=16000, device_index=None):
     """Record audio from microphone"""
     p = pyaudio.PyAudio()
     
-    # If no device specified, try to find Wireless GO II or use device 2 (hw:2,0)
+    # If no device specified, use system default
     if device_index is None:
-        for i in range(p.get_device_count()):
-            info = p.get_device_info_by_index(i)
-            # Check for RODE Wireless GO II or generic RODE device
-            if ('RODE' in info['name'] or 'Wireless GO II' in info['name']) and info['maxInputChannels'] > 0:
-                device_index = i
-                print(f"✓ Found {info['name']} on device {i}")
-                break
-        # Fallback to device 2 if available (hw:2,0)
-        if device_index is None and p.get_device_count() > 2:
-            info = p.get_device_info_by_index(2)
-            if info['maxInputChannels'] > 0:
-                device_index = 2
-                print(f"✓ Using fallback device 2: {info['name']}")
+        info = p.get_default_input_device_info()
+        device_index = info['index']
+        print(f"✓ Using default device {device_index}: {info['name']}")
     
     # RODE Wireless GO II is 48kHz, need to resample to 16kHz
     hw_rate = 48000
@@ -281,20 +271,11 @@ def record_audio_vad(max_duration=10, rate=16000, device_index=None, silence_thr
     
     p = pyaudio.PyAudio()
     
-    # If no device specified, try to find RODE Wireless GO II or use device 2
+    # If no device specified, use system default
     if device_index is None:
-        for i in range(p.get_device_count()):
-            info = p.get_device_info_by_index(i)
-            if ('RODE' in info['name'] or 'Wireless GO II' in info['name']) and info['maxInputChannels'] > 0:
-                device_index = i
-                print(f"✓ Found {info['name']} on device {i}")
-                break
-        # Fallback to device 2 if available (hw:2,0)
-        if device_index is None and p.get_device_count() > 2:
-            info = p.get_device_info_by_index(2)
-            if info['maxInputChannels'] > 0:
-                device_index = 2
-                print(f"✓ Using fallback device 2: {info['name']}")
+        info = p.get_default_input_device_info()
+        device_index = info['index']
+        print(f"✓ Using default device {device_index}: {info['name']}")
     
     # RODE Wireless GO II is 48kHz, need to resample to 16kHz
     hw_rate = 48000
@@ -312,6 +293,7 @@ def record_audio_vad(max_duration=10, rate=16000, device_index=None, silence_thr
     silence_frames = 0
     silence_threshold_frames = int(silence_duration * hw_rate / 1024)
     has_speech = False
+    grace_period_frames = int(3 * hw_rate / 1024)  # 3-second grace period before VAD kicks in
     
     for i in range(0, int(hw_rate / 1024 * max_duration)):
         data = stream.read(1024, exception_on_overflow=False)
@@ -333,8 +315,8 @@ def record_audio_vad(max_duration=10, rate=16000, device_index=None, silence_thr
             if has_speech:  # Only count silence after we've detected speech
                 silence_frames += 1
         
-        # Stop if we've detected speech and then silence
-        if has_speech and silence_frames > silence_threshold_frames:
+        # Stop only after grace period AND we've detected speech and then silence
+        if i >= grace_period_frames and has_speech and silence_frames > silence_threshold_frames:
             print("✓ Silence detected, stopping...")
             break
     
@@ -671,7 +653,7 @@ Grade the answer."""
         print(f"Raw response: {raw_response[:200]}")
         return None
 
-def speak_riva(text, server="localhost:50051", rate=48000, output_device_index=1):
+def speak_riva(text, server="localhost:50051", rate=48000, output_device_index=0):
     """Synthesize and play speech using Riva TTS"""
     print("🔊 Speaking...")
     
@@ -715,7 +697,7 @@ def main():
     parser.add_argument("--duration", type=int, default=5, help="Recording duration in seconds")
     parser.add_argument("--no-vad", action="store_true", help="Disable voice activity detection (use fixed duration)")
     parser.add_argument("--device", type=int, default=None, help="Audio input device index")
-    parser.add_argument("--output-device", type=int, default=1, help="Audio output device index (USB speaker is usually 1)")
+    parser.add_argument("--output-device", type=int, default=0, help="Audio output device index (KT USB Audio speaker is device 0)")
     parser.add_argument("--mode", default="chat", choices=["chat", "madagascar_quiz"],
                         help="Mode: chat or madagascar_quiz")
     parser.add_argument("--kid_name", default="Adrian", help="Kid's name for quiz mode")
