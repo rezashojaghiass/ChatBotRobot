@@ -409,12 +409,10 @@ def query_aws_bedrock(text, model_id="meta.llama3-8b-instruct-v1:0", region="us-
     try:
         bedrock = boto3.client('bedrock-runtime', region_name=region)
         
-        # System context: Buzz Lightyear personality
-        system_prompt = """You are Buzz Lightyear, the Space Ranger toy, speaking to Adrian.
-You are brave, heroic, and sometimes overly serious about your space ranger duties.
-Use phrases like "To infinity and beyond!", "Space Ranger reporting for duty", and similar Buzz Lightyear expressions.
-Keep responses short (1-2 sentences) and stay in character.
-You believe you're a real space ranger protecting Adrian."""
+        # System context: Simple helpful assistant
+        system_prompt = """You are a helpful and friendly AI assistant.
+Keep responses short (1-2 sentences) and conversational.
+Be respectful and provide accurate information."""
         
         # Format based on model type
         if "claude" in model_id:
@@ -425,16 +423,16 @@ You believe you're a real space ranger protecting Adrian."""
                 "temperature": 0.7,
                 "system": system_prompt,
                 "messages": [
-                    {"role": "user", "content": f"Adrian: {text}"}
+                    {"role": "user", "content": f"User: {text}"}
                 ]
             })
         else:
             # Llama format
             body = json.dumps({
-                "prompt": f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nAdrian: {text}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nBuzz Lightyear: ",
+                "prompt": f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nUser: {text}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nAssistant: ",
                 "max_gen_len": 200,
                 "temperature": 0.7,
-                "stop": ["<|eot_id|>", "Adrian:", "\nAdrian:", "\n\n"]
+                "stop": ["<|eot_id|>", "User:", "\nUser:", "\n\n"]
             })
         
         response = invoke_with_backoff(
@@ -454,9 +452,9 @@ You believe you're a real space ranger protecting Adrian."""
             raw_text = response_body['generation'].strip()
         
         # Clean up: take only first response, remove any continuation
-        response_text = raw_text.split('Adrian:')[0].strip()
+        response_text = raw_text.split('User:')[0].strip()
         
-        print(f"💬 Buzz: {response_text}")
+        print(f"💬 Assistant: {response_text}")
         return response_text
         
     except Exception as e:
@@ -700,7 +698,7 @@ def main():
     parser.add_argument("--output-device", type=int, default=0, help="Audio output device index (KT USB Audio speaker is device 0)")
     parser.add_argument("--mode", default="chat", choices=["chat", "madagascar_quiz"],
                         help="Mode: chat or madagascar_quiz")
-    parser.add_argument("--kid_name", default="Adrian", help="Kid's name for quiz mode")
+    parser.add_argument("--kid_name", default="Reza", help="User's name")
     parser.add_argument("--quiz_len", type=int, default=10, help="Number of quiz questions")
     parser.add_argument("--rag", action="store_true", help="Enable RAG with subtitle file")
     parser.add_argument("--subtitle", default="/mnt/nvme/adrian/riva/Madagascar.720p.CHD.en.srt",
