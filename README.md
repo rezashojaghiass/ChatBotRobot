@@ -7,7 +7,7 @@ An interactive, real-time voice-controlled AI system featuring quiz mode and con
 - **Real-time Voice Interaction**: Speech-to-Text → AI Response → Text-to-Speech pipeline
 - **Multiple AI Models**: Llama 3 8B, Llama 3.1 70B, Claude 3.5 Sonnet support
 - **Madagascar Quiz Mode**: Interactive quiz with progressive difficulty and RAG-enhanced context
-- **Voice Activity Detection (VAD)**: Auto-stops recording when user stops speaking (0.5s silence)
+- **Voice Activity Detection (VAD)**: Auto-stops recording after user finishes speaking (3s grace period, then 0.5s silence threshold)
 - **RAG (Retrieval-Augmented Generation)**: Uses movie subtitles for accurate context
 - **Buzz Lightyear Persona**: Enthusiastic, kid-friendly character interactions
 - **Edge AI Deployment**: Runs entirely on Jetson Xavier with <2s latency
@@ -305,6 +305,12 @@ python3 scripts/speak.py "Bravo Adrian for tidying up your toys!"
 --subtitle <path>         # Knowledge file (.srt, .pdf, .txt) - defaults to Madagascar.srt
 --output-device 25        # Audio output device index (run: python3 list_audio_devices.py)
 ```
+
+**Note on Voice Activity Detection (VAD):**
+- By default, the system has a 3-second grace period before VAD activates
+- After the grace period, it waits for 0.5 seconds of silence to auto-stop recording
+- This ensures you have time to think and speak naturally without interruption
+- Use `--no-vad` flag if you prefer manual timing or want to record the full duration
 
 ## 📁 Project Structure
 
