@@ -39,7 +39,7 @@ OUTPUT_DEVICE=""
 NO_VAD=""
 
 # Script directory - get absolute path to ChatBotRobot root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ============================================================================
 # Function: usage()
