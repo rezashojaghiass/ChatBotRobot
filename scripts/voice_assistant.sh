@@ -77,7 +77,8 @@ ${GREEN}Examples:${NC}
 ${GREEN}Notes:${NC}
     • VAD (Voice Activity Detection): 3-second grace period, then auto-stops after 0.5s silence
     • Just speak naturally - no special commands needed
-    • Type Ctrl+C to exit the conversation
+    • ${GREEN}Say "quit", "exit", "stop", or "bye" to end the conversation gracefully${NC}
+    • Type Ctrl+C to force exit
     • Ensure AWS credentials are configured (aws configure)
     • RIVA services must be running (start_riva.sh)
 
