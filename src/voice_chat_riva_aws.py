@@ -778,6 +778,11 @@ def run_chat_mode(args):
             
             # Transcribe
             text = transcribe_riva(audio, server=args.server)
+            # Check for exit keywords
+            exit_words = ["quit", "exit", "stop", "bye"]
+            if any(word in text.lower() for word in exit_words):
+                print("👋 Ending conversation...")
+                break
             if not text:
                 print("❌ No speech detected, try again\n")
                 continue
