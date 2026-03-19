@@ -727,7 +727,7 @@ def main():
     parser.add_argument("--kid_name", default="Adrian", help="User's name")
     parser.add_argument("--quiz_len", type=int, default=10, help="Number of quiz questions")
     parser.add_argument("--rag", action="store_true", help="Enable RAG with subtitle file")
-    parser.add_argument("--subtitle", default="/mnt/nvme/adrian/riva/Madagascar.720p.CHD.en.srt",
+    parser.add_argument("--subtitle", default="data/Madagascar.srt",
                         help="Path to subtitle file for RAG")
     parser.add_argument("--topic", default="the Madagascar movie",
                         help="Quiz topic (e.g., 'space and galaxies', 'Toy Story movie', etc.)")
