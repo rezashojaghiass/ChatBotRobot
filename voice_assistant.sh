@@ -158,6 +158,25 @@ echo "  Output Device: $OUTPUT_DEVICE"
 echo ""
 
 # ============================================================================
+# Start Screensaver (for Jetson Xavier display)
+# ============================================================================
+# Ensure xscreensaver is running before app starts
+# The app will disable it during execution and re-enable it on exit
+if command -v xscreensaver &> /dev/null; then
+    # Kill any existing instances for clean restart
+    pkill -9 xscreensaver 2>/dev/null || true
+    sleep 0.5
+    
+    # Start xscreensaver in background on DISPLAY=:0
+    export DISPLAY=:0
+    /usr/bin/xscreensaver -no-splash > /tmp/xscreensaver.log 2>&1 &
+    SCREENSAVER_PID=$!
+    echo -e "${GREEN}✓ Screensaver started (PID: $SCREENSAVER_PID)${NC}"
+else
+    echo -e "${YELLOW}⚠️  xscreensaver not found (optional)${NC}"
+fi
+
+# ============================================================================
 # Build Python Command
 # ============================================================================
 # Construct the full command with all parameters to pass to voice_chat_riva_aws.py
